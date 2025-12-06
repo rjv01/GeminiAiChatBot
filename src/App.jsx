@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import axios from "axios";
 
 function App() {
@@ -6,8 +6,22 @@ function App() {
   const [answer,setAnswer] = useState("");
   const [loading,setLoading] = useState(false);
   const [prevQues,setPrevQues] = useState("");
-  
+  const [errorMessage,setErrorMessage] = useState("");
+
+  const MIN_CALL_INTERVAL_MS = 5000;
+  const lastCalledTimeRef = useRef(0);
+
   async function generateAnswer(){
+
+    const now = Date.now();
+    const timeSinceLastCall = now - lastCalledTimeRef.current;
+
+    if(timeSinceLastCall < MIN_CALL_INTERVAL_MS){
+      const timeLeft = Math.ceil((MIN_CALL_INTERVAL_MS - timeSinceLastCall)/1000);
+      setErrorMessage(`Rate limit exceeded. Please wait ${timeLeft} seconds before making any request`)
+      return;
+    }
+    setErrorMessage('');
 
     if(prompt.length == 0){
       return alert("Prompt cannot be empty");
@@ -16,21 +30,29 @@ function App() {
       setLoading(true);
       setPrevQues(prompt);
       setPrompt("");
-      const response = await axios({
-        url:`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${
-            import.meta.env.VITE_API_GENERATIVE_LANGUAGE_CLIENT
-          }`,
-          method:"post",
-          data:{
-            contents:[
-              // { parts: [{ text: "Write a short story of lose boy who becomes wanted by everyone " }] }
-              { parts: [{ text: prompt }] }
-            ],
-          },
-      });
-      console.log(response['data']['candidates'][0]['content']['parts'][0]['text']);
-      setAnswer(response['data']['candidates'][0]['content']['parts'][0]['text']);
-      setLoading(false);
+      try {
+          const response = await axios({
+          url:`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${
+              import.meta.env.VITE_API_GENERATIVE_LANGUAGE_CLIENT
+            }`,
+            method:"post",
+            data:{
+              contents:[
+                // { parts: [{ text: "Write a short story of lose boy who becomes wanted by everyone " }] }
+                { parts: [{ text: prompt }] }
+              ],
+            },
+        });
+        // console.log(response['data']['candidates'][0]['content']['parts'][0]['text']);
+        console.log("data generated...");
+        setAnswer(response['data']['candidates'][0]['content']['parts'][0]['text']);
+        } catch (error) {
+          console.log("Api Error",error);
+          setErrorMessage("Too many request");
+          alert("API error too many request!!!");
+        } finally{
+          setLoading(false);
+        }
       }
 
   }
@@ -39,8 +61,13 @@ function App() {
       <h1 className='text-3xl p-3 m-3 text-blue-500'>Chat with Ai</h1>
       <div className='flex flex-col border border-white shadow-xl w-[900px] p-[70px] m-3 rounded-lg'>
         {
+          errorMessage && (
+            <p className='text-red-600 text-center capitalize mb-2 text-xl'>dd{errorMessage}</p>
+          )
+        }
+        {
           loading ? (
-            <p className='text-xl text-white'>Loading... free-tier services can be a bit slow.</p>
+            <p className='text-xl text-yellow-300 text-center animate-pulse'>Loading... free-tier services can be a bit slow.</p>
           ) : (
             <div>
               {
