@@ -1,5 +1,7 @@
 import { useRef, useState } from 'react';
 import axios from "axios";
+import Markdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 function App() {
   const [prompt,setPrompt] = useState("");
@@ -58,8 +60,8 @@ function App() {
   }
   return (
     <div className='min-h-screen flex flex-col items-center bg-black'>
-      <h1 className='text-3xl p-3 m-3 text-blue-500'>Chat with Ai</h1>
-      <div className='flex flex-col border border-white shadow-xl w-[900px] p-[70px] m-3 rounded-lg'>
+      <h1 className='text-3xl p-3 m-3 text-blue-500 font-mono'>Chat with AI</h1>
+      <div className='flex flex-col border border-yellow-400 shadow-xl w-[900px] p-[70px] m-3 rounded-lg'>
         {
           errorMessage && (
             <p className='text-red-600 text-center capitalize mb-2 text-xl'>dd{errorMessage}</p>
@@ -72,13 +74,29 @@ function App() {
             <div>
               {
                 prevQues && (
-                  <div className='flex flex-col border border-white rounded-xl p-6 m-3 mb-8'>
+                  <div className='flex flex-col border border-yellow-400 rounded-xl p-6 m-3 mb-8'>
                     <p className='bg-slate-50 p-3 m-3 rounded-lg font-bold'>{"> "}{prevQues}</p>
-                    <pre 
-                      className='text-lg text-blue-300  whitespace-pre-wrap wrap-break-words overflow-auto max-h-[500px]'
-                    >
+                    <p className='text-blue-400 p-3'>
+                      <Markdown
+                        remarkPlugins={[remarkGfm]}
+                        components={{
+                          p: ({ node, ...props }) => (
+                            <p
+                              className="text-lg text-yellow-600 font-serif p-3 m-2 whitespace-pre-wrap wrap-break-word"
+                              {...props}
+                            />
+                          ),
+                          span: ({ node, ...props }) => (
+                            <span
+                              className="text-lg text-yellow-600 font-serif p-3 m-2 whitespace-pre-wrap wrap-break-word"
+                              {...props}
+                            />
+                          ),
+                        }}
+                      >
                         {answer}
-                    </pre>
+                      </Markdown>
+                    </p>
                   </div>
                 )
               }
@@ -91,11 +109,11 @@ function App() {
           value={prompt}
           onChange={(e)=>setPrompt(e.target.value)}
           placeholder='Enter your prompt'
-          className='border p-3 m-3 text-white rounded-2xl text-xl'
+          className='border border-yellow-500 p-3 m-3 text-white rounded-2xl text-xl'
         ></textarea>
         <button 
           onClick={generateAnswer}
-          className='text-2xl border rounded-lg m-4 p-4 bg-white hover:bg-white/50 duration-300 cursor-pointer'
+          className='text-2xl border rounded-lg m-4 p-4 bg-yellow-500 hover:bg-yellow-500/50 duration-150 cursor-pointer'
         >
           Generate Answer</button>
       </div>
